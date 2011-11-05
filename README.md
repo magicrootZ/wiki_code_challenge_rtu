@@ -29,9 +29,9 @@ can be modified to listen to more channels; take a look at the config.json.examp
 It should be noted that the config.json file needs to be modified before running the application.
 Change the following properties to prevent namespace clashing (be kind to your fellows):
 
-  "ircNick": "magicRootbot", 
-  "ircUserName": "magicRootbot", 
-  "ircRealName": "magicRootbot", 
+    "ircNick": "magicRootbot", 
+    "ircUserName": "magicRootbot", 
+    "ircRealName": "magicRootbot", 
 
   Example:
 
@@ -43,11 +43,11 @@ Change the following properties to prevent namespace clashing (be kind to your f
 
 The app.js file also needs to be modified before running. Change the following line (55?):
 
-  headers: {'User-Agent': 'magicRootBot/0.1'}
+    headers: {'User-Agent': 'magicRootBot/0.1'}
 
 To something unique, for example:
 
-  headers: {'User-Agent': 'magicRootBot2/0.1'}
+    headers: {'User-Agent': 'magicRootBot2/0.1'}
 
 
 Add The contents of the vector.js file to YOUR vector.js file in your wikimedia account.
@@ -57,21 +57,21 @@ Execution:
 
 Run redis (through the terminal).
   
-  > redis-server
+    redis-server
   
 
 To run the app you'll first need to fetch wikipedia updates from IRC and 
 feed them to redis. After some trial and error, in order to stably execute
 updates.js, it needs to be executed under the web user, for example:
   
-  > sudo -u _www `which node` /<your path to wiki_code_challenge_rtu>/updates.js
+    sudo -u _www `which node` /<your path to wiki_code_challenge_rtu>/updates.js
   
 The web user varies depending on the Operating System and/or server, in this case '_www'.
 
 
 next, start the webapp; this also should be run as the web user, for example:
 
-  > sudo -u _www `which node` /<your path to wiki_code_challenge_rtu>/app.js
+    sudo -u _www `which node` /<your path to wiki_code_challenge_rtu>/app.js
 
 
 === Begin Legacy README.md content ===
