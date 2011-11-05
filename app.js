@@ -8,22 +8,7 @@ var fs = require('fs'),
     sio = require('socket.io'),
     express = require('express');
 
-
-
-// little helper to package up zrevrange redis query results
-
-function zresults(resp) {
-  results = []
-  for (var i=0; i < resp.length; i+=2) {
-    r = JSON.parse(resp[i]);
-    r['score'] = resp[i+1];
-    results.push(r)
-  }
-  return results;
-}
-
 // get the configuration
-
 var configPath = path.join(__dirname, "config.json");
 var config = JSON.parse(fs.readFileSync(configPath));
 var app = module.exports = express.createServer();
@@ -43,120 +28,55 @@ wikisSorted.sort(function(a, b) {
 });
 
 
-// set up the web app
-
-app.configure(function(){
-  app.set('views', __dirname + '/views');
-  app.set('view engine', 'jade');
-  app.use(express.bodyParser());
-  app.use(express.methodOverride());
-  app.use(app.router);
-  app.use(express.static(__dirname + '/public'));
-});
-
-app.configure('development', function(){
-  app.use(express.errorHandler({ dumpExceptions: true, showStack: true })); 
-});
-
-app.configure('production', function(){
-  app.use(express.errorHandler()); 
-});
-
-app.get('/', function(req, res){
-  res.render('index', {
-    title: 'wikistream',
-    wikis: config.wikipedias,
-    wikisSorted: wikisSorted,
-    stream: true,
-    trends: false
-  });
-});
-
-app.get('/commons-image/:page', function(req, res){
-  var path = "/w/api.php?action=query&titles=" + 
-             encodeURIComponent(req.params.page) + 
-             "&prop=imageinfo&iiprop=url&format=json";
-  var opts = {
-    headers: {'User-Agent': 'wikistream'},
-    host: 'commons.wikimedia.org',
-    path: path
-  };
-  http.get(opts, function(response) {
-    //res.header('Content-Type', 'application/json');
-    response.on('data', function(chunk) {
-      res.write(chunk);
-    });
-    response.on('end', function() {
-      res.end();
-    });
-  });
-});
-
-app.get('/trends/', function(req, res){
-  res.render('trends', {
-    title: 'wikistream daily trends',
-    stream: false,
-    trends: true
-  });
-});
-
-app.get('/about/', function(req, res){
-  res.render('about', {
-    title: 'about wikistream',
-    stream: false,
-    trends: false
-  });
-});
-
-// TODO: might be able to create one stats view that does all these?
-
-stats = redis.createClient(),
-
-app.get('/stats/users-daily.json', function(req, res){
-  stats.zrevrange(['users-daily', 0, 99, 'withscores'], function(e, r) {
-    res.send(zresults(r));
-  });
-});
-
-app.get('/stats/articles-daily.json', function(req, res){
-  stats.zrevrange(['articles-daily', 0, 99, 'withscores'], function (e, r) {
-    res.send(zresults(r));
-  });
-});
-
-app.get('/stats/articles-hourly.json', function(req, res){
-  stats.zrevrange(['articles-hourly', 0, 99, 'withscores'], function (e, r) {
-    res.send(zresults(r));
-  });
-});
-
-app.get('/stats/robots-daily.json', function(req, res){
-  stats.zrevrange(['robots-daily', 0, 99, 'withscores'], function (e, r) {
-    res.send(zresults(r));
-  });
-});
-
 app.listen(3000);
 
-
 // set up the socket.io update stream
-
 var io = sio.listen(app);
 
-io.configure('production', function() {
-  io.set('log level', 2);
-  // disabled websocket since it doesn't seem to work with node http-proxy
-  // which I am using on inkdroid.org to partition traffic YMMV
-  io.set('transports', ['flashsocket', 'htmlfile', 'xhr-polling', 'jsonp-polling']);
-});
-
 io.sockets.on('connection', function(socket) {
-  var updates = redis.createClient();
-  updates.subscribe('wikipedia');
-  updates.on("message", function (channel, message) {
-    socket.send(message);
-  });
-  socket.on('disconnect', function() {
-    updates.quit();
-  });
-});
+	// A client has connected, emit the 'requestingRegistration' event.
+	socket.emit('requestingRegistration');
+	// When a browser/client receives the 'requestingRegistration' event, it
+	// should emit a corresponding 'sendingRegistration' event. Listen for it.
+	socket.on('sendingRegistration', function(data){
+		// connect to redis
+		var updates = redis.createClient();
+		// subscribe to the page channel
+		updates.subscribe(data.title);
+		// when a page has been updated, notify the client
+		updates.on("message", function(channel, message){
+				   
+			// Note that message contains information about the 
+			// update. We are not using it here, but it might
+			// be useful if the application is further developed.
+			
+			// At this point we know the page has been updated.
+			// Fetch the updated version.
+			// TODO: change options.headers['User-Agent'] to something unique
+			var options = {
+				host: 'en.wikipedia.org',
+				port: 80,
+				path: '/w/index.php?action=render&title=' + encodeURI(data.title.replace('/wiki/','')),
+				headers: {'User-Agent': 'magicRootBot/0.1'}
+			}
+
+			// get the updated version
+			http.get(options, function(res){
+				var data = '';
+				res.setEncoding('utf8');
+				res.on('data', function(chunk){
+					// data aggregation
+					data += chunk;
+				});
+					 
+				// Once we receive all the data, send it to the client.
+				res.on('end', function(){
+					   socket.send(JSON.stringify({html: data}));
+			   });
+			}).on('error', function(e){
+				// something went wrong.
+				console.log('got error ' + e.message);
+			}); 
+		}); // end message
+	}); // end sendingRegistration
+}); // end connection

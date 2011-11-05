@@ -26,8 +26,6 @@ function main() {
     client.on('privmsg', processMessage);
   });
 
-  setDailyStatsTimeout();  
-  setHourlyStatsTimeout();
 }
 
 function parse_msg (msg) {
@@ -86,80 +84,13 @@ function parse_msg (msg) {
 function processMessage (msg) {
   m = parse_msg(msg.params);
   if (m) {
-    redis.publish('wikipedia', JSON.stringify(m));
-    stats(m);
+	// Are we bound by memory limits as to the amount of channels that 
+	// we can create/publish on?
+	redis.publish(m.pageUrl.replace('http:\/\/en.wikipedia.org',''), JSON.stringify(m));
     console.log(m.page + " -- " + m.wikipediaShort);
   }
 }
 
-function stats (msg) {
-  dailyStats(msg);
-  hourlyStats(msg);
-  permStats(msg);
-}
-
-function dailyStats (msg) {
-  redis.zincrby('wikipedias-daily', 1, msg.wikipedia);
-  if (msg.namespace == "article") {
-    redis.zincrby('articles-daily', 1, JSON.stringify(
-      {name: msg.page, 'url': msg.pageUrl, 'wikipedia': msg.wikipediaShort}));
-  }
-  if (msg.robot) {
-    redis.zincrby('robots-daily', 1, JSON.stringify(
-      {name: msg.user, url: msg.userUrl, 'wikipedia': msg.wikipediaShort}));
-
-  } else {
-    redis.zincrby('users-daily', 1, JSON.stringify(
-      {name: msg.user, url: msg.userUrl, 'wikipedia': msg.wikipediaShort}));
-  }
-}
-
-function setDailyStatsTimeout () {
-  var t = new Date();
-  var elapsed = t.getUTCHours() * 60 * 60 
-                + t.getUTCMinutes() * 60 
-                + t.getUTCSeconds();
-  var remaining = 24 * 60 * 60 - elapsed;
-  setTimeout(resetDailyStats, remaining * 1000);
-}
-
-function resetDailyStats () {
-  console.log("resetting daily stats");
-  redis.del('articles-daily');
-  redis.del('robots-daily');
-  redis.del('users-daily');
-  redis.del('wikipedias-daily');
-  setDailyStatsTimeout();
-}
-
-function hourlyStats (msg) {
-  if (msg.namespace == "article") {
-    redis.zincrby('articles-hourly', 1, JSON.stringify(
-      {name: msg.page, 'url': msg.pageUrl, 'wikipedia': msg.wikipediaShort}));
-  }
-}
-
-function setHourlyStatsTimeout () {
-  var t = new Date();
-  var elapsed = t.getUTCMinutes() * 60 + t.getUTCSeconds();
-  var remaining = 60 * 60 - elapsed;
-  setTimeout(resetHourlyStats, remaining * 1000);
-}
-
-function resetHourlyStats () {
-  console.log("resetting daily stats");
-  redis.del('articles-hourly');
-  setHourlyStatsTimeout();
-}
-
-function permStats (msg) {
-  if (msg.robot) {
-    redis.zincrby('robots', 1, msg.user);
-  }
-  if (msg.namespace != "article") {
-    redis.zincrby('namespaces', 1, msg.namespace);
-  }
-}
 
 function getNamespace (wikipedia, page) {
   ns = null;
@@ -172,5 +103,6 @@ function getNamespace (wikipedia, page) {
   }
   return ns;
 }
- 
+
+// The big bang! 
 main();
