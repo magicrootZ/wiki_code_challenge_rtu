@@ -76,18 +76,6 @@ next, start the webapp; this also should be run as the web user, for example:
 
 === Begin Legacy README.md content ===
 
-The icons were created by Delphine Ménard, and are separately available at:
-
-* http://commons.wikimedia.org/wiki/File:Unisex_user_icon.svg
-* http://commons.wikimedia.org/wiki/File:Icon_robot.svg
-* http://commons.wikimedia.org/wiki/File:Icon_anon.svg
-
-Authors: 
-
-* Ed Summers (http://twitter.com/edsu)
-* Sean Hannan (http://twitter.com/mrdys)
-* Delphine Ménard (http://twitter.com/notafish)
-
 License: Public Domain
 
 === End Legacy README.md content ===
