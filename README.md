@@ -76,16 +76,6 @@ next, start the webapp; this also should be run as the web user, for example:
 
 === Begin Legacy README.md content ===
 
-Upstart scripts are included, which you should be able to install and use. Just
-make sure that you edit them so that they really point at where you have
-installed node and checked out the wikistream code.
-
-    cp wikistream.conf /etc/init/wikistream.conf
-    start wikistream
-
-    cp wikistream-irc.conf /etc/init/wikistream-irc.conf
-    start wikistream-irc
-
 The icons were created by Delphine Ménard, and are separately available at:
 
 * http://commons.wikimedia.org/wiki/File:Unisex_user_icon.svg
