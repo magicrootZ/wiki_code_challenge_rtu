@@ -39,7 +39,7 @@ io.sockets.on('connection', function(socket) {
 	// When a browser/client receives the 'requestingRegistration' event, it
 	// should emit a corresponding 'sendingRegistration' event. Listen for it.
 	socket.on('sendingRegistration', function(data){
-	  console.log('OZKEY: registering ' + data.title);
+	    console.log('OZKEY: registering ' + data.title);
 		// connect to redis
 		var updates = redis.createClient();
 		// subscribe to the page channel

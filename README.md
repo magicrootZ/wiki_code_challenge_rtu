@@ -19,8 +19,9 @@ Installation:
 * install [npm](http://npmjs.org/)
 * npm install
 
-This project was developed under an OS X environment. NPM versions might differ depending on
-environments.
+This project was developed under an OS X environment. npm versions might differ depending on
+environments. I had trouble installing the express dependency in a linux box (Ubuntu 11.10)
+due to the differences in npm.
 
 Configuration:
 
@@ -43,7 +44,7 @@ Change the following properties to prevent namespace clashing (be kind to your f
 
 
 
-The app.js file also needs to be modified before running. Change the following line (55?):
+The app.js file also needs to be modified before running. Change the following line (61?):
 
     headers: {'User-Agent': 'magicRootBot/0.1'}
 
@@ -60,7 +61,10 @@ Execution:
 Run redis (through the terminal).
   
     redis-server
-  
+
+If you do not want to view any output from the redis-server and run it as a background process, run:
+ 
+    redis-server > /dev/null &
 
 To run the app you'll first need to fetch wikipedia updates from IRC and 
 feed them to redis. After some trial and error, in order to stably execute
@@ -69,12 +73,20 @@ updates.js, it needs to be executed under the web user, for example:
     sudo -u _www `which node` /<your path to wiki_code_challenge_rtu>/updates.js
   
 The web user varies depending on the Operating System and/or server, in this case '_www'.
+In order to just view output relevant to this project you can do:
+
+    sudo -u _www `which node` /<your path to wiki_code_challenge_rtu>/updates.js | grep OZKEY
+	
+If you dont want to view any output and run the updates.js as a background process run:
+ 
+    sudo -u _www `which node` /<your path to wiki_code_challenge_rtu>/updates.js > /dev/null &
 
 
 next, start the webapp; this also should be run as the web user, for example:
 
     sudo -u _www `which node` /<your path to wiki_code_challenge_rtu>/app.js
 
+You can append the same ' | grep OZKEY' and ' >/dev/null &' to this one depending on want you want.
 
 === Begin Legacy README.md content ===
 
