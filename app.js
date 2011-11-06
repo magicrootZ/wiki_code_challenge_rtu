@@ -39,6 +39,7 @@ io.sockets.on('connection', function(socket) {
 	// When a browser/client receives the 'requestingRegistration' event, it
 	// should emit a corresponding 'sendingRegistration' event. Listen for it.
 	socket.on('sendingRegistration', function(data){
+	  console.log('OZKEY: registering ' + data.title);
 		// connect to redis
 		var updates = redis.createClient();
 		// subscribe to the page channel
@@ -62,16 +63,17 @@ io.sockets.on('connection', function(socket) {
 
 			// get the updated version
 			http.get(options, function(res){
-				var data = '';
+				var body = '';
 				res.setEncoding('utf8');
 				res.on('data', function(chunk){
 					// data aggregation
-					data += chunk;
+					body += chunk;
 				});
 					 
 				// Once we receive all the data, send it to the client.
 				res.on('end', function(){
-					   socket.send(JSON.stringify({html: data}));
+					   console.log('OZKEY: sending data to ' + data.title);
+					   socket.emit('updatePage', {html: body});
 			   });
 			}).on('error', function(e){
 				// something went wrong.

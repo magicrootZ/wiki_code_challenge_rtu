@@ -19,6 +19,8 @@ Installation:
 * install [npm](http://npmjs.org/)
 * npm install
 
+This project was developed under an OS X environment. NPM versions might differ depending on
+environments.
 
 Configuration:
 

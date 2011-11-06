@@ -87,7 +87,8 @@ function processMessage (msg) {
 	// Are we bound by memory limits as to the amount of channels that 
 	// we can create/publish on?
 	redis.publish(m.pageUrl.replace('http:\/\/en.wikipedia.org',''), JSON.stringify(m));
-    console.log(m.page + " -- " + m.wikipediaShort);
+    //console.log(m.page + " -- " + m.wikipediaShort);
+	  console.log('OZKEY: publishing on '  + m.pageUrl.replace('http:\/\/en.wikipedia.org',''));
   }
 }
 
